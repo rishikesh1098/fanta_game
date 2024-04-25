@@ -4,92 +4,121 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Random Image Viewer</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: pink; /* Set background color to pink */
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      position: relative; /* Add this for positioning the timer */
-    }
-
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      background-color: red; /* Set button background color to red */
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-
-    button.active {
-      background-color: green; /* Set background color to green for active button */
+      padding: 10px; /* Added padding for better spacing */
     }
 
     #imageContainer {
       margin-top: 20px;
+      text-align: center; /* Center images */
     }
 
     #imageContainer img {
       max-width: 100%;
-      max-height: 400px;
+      height: auto; /* Maintain aspect ratio */
     }
 
-    #timer {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 18px;
+    button {
+      margin: 10px 0;
+      font-size: 16px;
+      cursor: pointer;
+      display: block; /* Ensure buttons take full width */
+      width: 100%; /* Make buttons full width */
     }
 
-    #timeTable {
+    button.active {
+      background-color: green !important; /* Set background color to green for active button */
+    }
+
+    #tablesContainer {
       margin-top: 20px;
-      border-collapse: collapse;
     }
 
-    #timeTable th, #timeTable td {
-      border: 1px solid black;
-      padding: 8px;
-      text-align: center;
+    #inputTable,
+    #timeTable {
+      width: 100%;
+      overflow-x: auto; /* Enable horizontal scrolling for small screens */
+    }
+
+    .table-responsive {
+      overflow-x: auto; /* Enable horizontal scrolling for small screens */
+    }
+
+    .inputField {
+      width: calc(100% - 20px); /* Adjust the width of the input fields */
+      padding: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
-  <div id="timer">00:00</div> <!-- Timer element -->
-  <div id="imageContainer">
-    <!-- Images will be loaded here -->
+  <div class="container">
+    <div class="row">
+      <div class="col-md-7">
+        <div id="imageContainer">
+          <!-- Images will be loaded here -->
+        </div>
+        <button onclick="showRandomImage('easy')" class="btn btn-danger" id="easyBtn">Easy <span id="easyTimer">00:00</span></button>
+        <button onclick="showRandomImage('medium')" class="btn btn-danger" id="mediumBtn">Medium <span id="mediumTimer">00:00</span></button>
+        <button onclick="showRandomImage('hard')" class="btn btn-danger" id="hardBtn">Hard <span id="hardTimer">00:00</span></button>
+      </div>
+      <div class="col-md-1"></div>
+      <div class="col-md-4" id="tablesContainer">
+        <div class="table-responsive">
+          <table id="timeTable" class="table">
+            <thead>
+              <tr>
+                <th>Difficulty</th>
+                <th>Time Elapsed</th>
+              </tr>
+            </thead>
+            <tbody id="timeTableBody">
+              <!-- Time elapsed will be displayed here -->
+            </tbody>
+          </table>
+        </div>
+        <div class="table-responsive">
+          <table id="inputTable" class="table">
+            <thead>
+              <tr>
+                <th>Serial No</th>
+                <th>Me</th>
+                <th>You</th>
+              </tr>
+            </thead>
+            <tbody id="inputTableBody">
+              <tr>
+                <td>1</td>
+                <td><input type="text" class="inputField"></td>
+                <td><input type="text" class="inputField"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <button onclick="addRow()" class="btn btn-primary">Add Row</button>
+      </div>
+    </div>
   </div>
-  <button onclick="showRandomImage('easy')" id="easyBtn">Easy</button>
-  <button onclick="showRandomImage('medium')" id="mediumBtn">Medium</button>
-  <button onclick="showRandomImage('hard')" id="hardBtn">Hard</button>
 
-  <table id="timeTable">
-    <thead>
-      <tr>
-        <th>Difficulty</th>
-        <th>Time Elapsed</th>
-      </tr>
-    </thead>
-    <tbody id="timeTableBody">
-      <!-- Time elapsed will be displayed here -->
-    </tbody>
-  </table>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
   <script>
     var easyImages = [
-      './Photo/easy/1.png', './Photo/easy/2.jpeg', './Photo/easy/3.jpeg','./Photo/easy/4.jpeg','./Photo/easy/5.jpeg',
+      './photo/easy/1.png', './photo/easy/2.jpeg', './photo/easy/3.jpeg','./photo/easy/4.jpeg','./photo/easy/5.jpeg',
     ];
     var mediumImages = [
-    './Photo/medium/1.png', './Photo/medium/2.jpeg', './Photo/medium/3.jpeg', /* Add medium images here */
+    './photo/medium/1.png', './photo/medium/2.jpeg', './photo/medium/3.jpeg', /* Add medium images here */
     ];
     var hardImages = [
-    './Photo/hard/1.png', './Photo/hard/2.jpeg', './Photo/hard/3.jpeg', './Photo/hard/4.jpeg', /* Add hard images here */
+    './photo/hard/1.png', './photo/hard/2.jpeg', './photo/hard/3.jpeg', './photo/hard/4.jpeg', /* Add hard images here */
     ];
 
     var timerInterval; // Variable to hold the timer interval
@@ -113,36 +142,34 @@
       }
       var randomIndex = Math.floor(Math.random() * images.length);
       var randomImage = images[randomIndex];
-      var imageContainer = document.getElementById("imageContainer");
-      imageContainer.innerHTML = `<img src="${randomImage}" alt="Random Image">`;
-      startTimer(); // Start the timer when a button is clicked
+      var imageContainer = $('#imageContainer');
+      imageContainer.html(`<img src="${randomImage}" alt="Random Image">`);
+      startTimer(difficulty); // Start the timer when a button is clicked
 
       // Remove active class from all buttons
-      document.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+      $('button').removeClass('active');
       // Add active class to the clicked button
-      document.getElementById(difficulty + 'Btn').classList.add('active');
+      $('#' + difficulty + 'Btn').addClass('active');
     }
 
-    function startTimer() {
-      var timerElement = document.getElementById("timer");
+    function startTimer(difficulty) {
+      var timerElement = $('#' + difficulty + 'Timer');
       var time = 0;
       timerInterval = setInterval(function() {
         time++;
         var minutes = Math.floor(time / 60);
         var seconds = time % 60;
-        timerElement.textContent = ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2);
+        timerElement.text(('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2));
       }, 1000); // Update the timer every second
     }
 
-    function stopTimer(difficulty) {
-      clearInterval(timerInterval); // Stop the timer
-      var elapsed_time = document.getElementById("timer").textContent;
-      var timeTableBody = document.getElementById("timeTableBody");
-      var newRow = timeTableBody.insertRow();
-      var difficultyCell = newRow.insertCell(0);
-      var timeCell = newRow.insertCell(1);
-      difficultyCell.textContent = difficulty;
-      timeCell.textContent = elapsed_time;
+    function addRow() {
+      var inputTableBody = $('#inputTableBody');
+      var newRow = $('<tr>');
+      newRow.append('<td>' + inputTableBody.children('tr').length + '</td>');
+      newRow.append('<td><input type="text" class="inputField"></td>');
+      newRow.append('<td><input type="text" class="inputField"></td>');
+      inputTableBody.append(newRow);
     }
   </script>
 </body>
