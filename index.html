@@ -1,176 +1,490 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Random Image Viewer</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: pink; /* Set background color to pink */
-      padding: 10px; /* Added padding for better spacing */
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup Timer with Image</title>
+    <style>
+        /* Reset some default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    #imageContainer {
-      margin-top: 20px;
-      text-align: center; /* Center images */
-    }
+        /* Body styles with background image */
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            background-image: url('background2.jpg');
+            background-size: cover; /* Make sure the image covers the whole body */
+            background-repeat: no-repeat; /* Prevent the image from repeating */
+        }
 
-    #imageContainer img {
-      max-width: 100%;
-      height: auto; /* Maintain aspect ratio */
-    }
+        /* Header styles */
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px 0;
+            text-align: center;
+        }
 
-    button {
-      margin: 10px 0;
-      font-size: 16px;
-      cursor: pointer;
-      display: block; /* Ensure buttons take full width */
-      width: 100%; /* Make buttons full width */
-    }
+        header img {
+            width: 100px;
+            height: auto;
+        }
 
-    button.active {
-      background-color: green !important; /* Set background color to green for active button */
-    }
+        /* Main content styles */
+        .main-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px;
+        }
 
-    #tablesContainer {
-      margin-top: 20px;
-    }
+        .button-container {
+            margin-top: 20px;
+        }
 
-    #inputTable,
-    #timeTable {
-      width: 100%;
-      overflow-x: auto; /* Enable horizontal scrolling for small screens */
-    }
+        .controlButton {
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff; /* Blue */
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
 
-    .table-responsive {
-      overflow-x: auto; /* Enable horizontal scrolling for small screens */
-    }
+        .controlButton:hover {
+            background-color: #0056b3; /* Darker Blue */
+        }
 
-    .inputField {
-      width: calc(100% - 20px); /* Adjust the width of the input fields */
-      padding: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-  </style>
+        /* Popup styles */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+            z-index: 9998; /* Ensure it's below the popup */
+        }
+
+        .popup-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 9999; /* Ensure it's above the overlay */
+            cursor: move; /* Cursor changes to indicate draggable */
+        }
+
+        .popup {
+            position: relative;
+        }
+
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-title {
+            margin: 0;
+        }
+
+        .popup img {
+            max-width: 100%;
+            max-height: 70vh; /* Limiting maximum height */
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .closePopup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Center timer vertically */
+        #timer {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Center control buttons */
+        #controlButtons {
+            text-align: center;
+        }
+
+        /* Footer styles */
+        footer {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
+
+        /* Table container styles */
+        .table-container {
+            flex-basis: 60%; /* Set width of table container */
+            overflow-x: auto; /* Enable horizontal scrolling */
+            max-height: 400px; /* Set maximum height */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        /* Add row button styles */
+        #addRowButton {
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #fff;
+            background-color: #28a745; /* Green */
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        #addRowButton:hover {
+            background-color: #218838; /* Darker Green */
+        }
+
+        /* Image name styles */
+        #imageName {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #007bff; /* Blue */
+            cursor: pointer;
+        }
+
+        #imageName:hover {
+            text-decoration: underline;
+        }
+
+        /* Delete row button styles */
+        .deleteRowButton {
+            padding: 5px 10px;
+            margin-left: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #fff;
+            background-color: #dc3545; /* Red */
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .deleteRowButton:hover {
+            background-color: #c82333; /* Darker Red */
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="row">
-      <div class="col-md-7">
-        <div id="imageContainer">
-          <!-- Images will be loaded here -->
-        </div>
-        <button onclick="showRandomImage('easy')" class="btn btn-danger" id="easyBtn">Easy <span id="easyTimer">00:00</span></button>
-        <button onclick="showRandomImage('medium')" class="btn btn-danger" id="mediumBtn">Medium <span id="mediumTimer">00:00</span></button>
-        <button onclick="showRandomImage('hard')" class="btn btn-danger" id="hardBtn">Hard <span id="hardTimer">00:00</span></button>
-      </div>
-      <div class="col-md-1"></div>
-      <div class="col-md-4" id="tablesContainer">
-        <div class="table-responsive">
-          <table id="timeTable" class="table">
-            <thead>
-              <tr>
-                <th>Difficulty</th>
-                <th>Time Elapsed</th>
-              </tr>
-            </thead>
-            <tbody id="timeTableBody">
-              <!-- Time elapsed will be displayed here -->
-            </tbody>
-          </table>
-        </div>
-        <div class="table-responsive">
-          <table id="inputTable" class="table">
-            <thead>
-              <tr>
-                <th>Serial No</th>
-                <th>Me</th>
-                <th>You</th>
-              </tr>
-            </thead>
-            <tbody id="inputTableBody">
-              <tr>
-                <td>1</td>
-                <td><input type="text" class="inputField"></td>
-                <td><input type="text" class="inputField"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <button onclick="addRow()" class="btn btn-primary">Add Row</button>
-      </div>
+
+<header>
+    <img src="logo.png" alt="Logo">
+</header>
+
+<div class="main-content">
+    <div class="button-container">
+        <!-- Add confirmation dialog to the button click events -->
+        <button class="controlButton" onclick="confirmAndOpenPopup('Easy', easyImages, 300)">Easy</button>
+        <button class="controlButton" onclick="confirmAndOpenPopup('Medium', mediumImages, 180)">Medium</button>
+        <button class="controlButton" onclick="confirmAndOpenPopup('Hard', hardImages, 120)">Hard</button>
+        <button class="controlButton" onclick="confirmAndOpenPopup('Foreplay', foreplayImages, 600)">Foreplay</button>
+        <button class="controlButton" onclick="confirmAndOpenPopup('Hotel', hotelImages, 900)">Hotel</button>
     </div>
-  </div>
+    <div class="table-container">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Sr. No</th>
+                    <th>Image Name</th>
+                    <th>Button Name</th>
+                    <th>Total Duration</th>
+                    <th>Me</th>
+                    <th>Rating</th>
+                    <th>You</th>
+                    <th>Rating</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be dynamically added here -->
+            </tbody>
+        </table>
+        <button id="addRowButton" onclick="addRow()">Add Row</button>
+    </div>
+</div>
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<div class="overlay" id="overlay"></div>
 
-  <script>
+<div class="popup-container" id="popupContainer">
+    <div class="popup">
+        <div class="popup-header">
+            <h2 id="popupTitle" class="popup-title"></h2>
+            <span class="closePopup" onclick="cancelPopup()">&#10006;</span>
+        </div>
+        <div id="imageContainer">
+            <img id="popupImage" src="" alt="Popup Image">
+        </div>
+        <div id="timer">00:00</div>
+        <div id="controlButtons" class="button-container">
+            <button id="pauseButton" class="controlButton" onclick="pauseTimer()">Pause</button>
+            <button id="doneButton" class="controlButton" onclick="donePopup()">Done</button>
+        </div>
+    </div>
+</div>
+
+<footer>
+    &copy; 2024 Your Company Name. All rights reserved.
+</footer>
+
+<script>
+    var interval;
+    var seconds = 0;
+    var minutes = 0;
+    var timerElement = document.getElementById('timer');
+    var popupImageElement = document.getElementById('popupImage');
+    var popupTitleElement = document.getElementById('popupTitle');
+    var popupContainer = document.getElementById('popupContainer');
+    var dataTableBody = document.querySelector('#dataTable tbody');
+    var rowCount = 0;
+
     var easyImages = [
-      './Photo/easy/1.png', './Photo/easy/2.jpeg', './Photo/easy/3.jpeg','./Photo/easy/4.jpeg','./Photo/easy/5.jpeg',
+        './photo/easy/1.png', './photo/easy/2.jpeg', './photo/easy/3.jpeg','./photo/easy/4.jpeg','./photo/easy/5.jpeg',
     ];
     var mediumImages = [
-    './Photo/medium/1.png', './Photo/medium/2.jpeg', './Photo/medium/3.jpeg', /* Add medium images here */
+        './photo/medium/1.png', './photo/medium/2.jpeg', './photo/medium/3.jpeg', /* Add medium images here */
     ];
     var hardImages = [
-    './Photo/hard/1.png', './Photo/hard/2.jpeg', './Photo/hard/3.jpeg', './Photo/hard/4.jpeg', /* Add hard images here */
+        './photo/hard/1.png', './photo/hard/2.jpeg', './photo/hard/3.jpeg', './photo/hard/4.jpeg', /* Add hard images here */
+    ];
+    var foreplayImages = [
+       './photo/1. Shuttle.png' , './photo/2. Mermaid.png', './photo/3. Cat.png' /* Add foreplay images here */
+    ];
+    var hotelImages = [
+        /* Add hotel images here */
     ];
 
-    var timerInterval; // Variable to hold the timer interval
-
-    function showRandomImage(difficulty) {
-      clearInterval(timerInterval); // Stop the timer if it's already running
-
-      var images;
-      switch (difficulty) {
-        case 'easy':
-          images = easyImages;
-          break;
-        case 'medium':
-          images = mediumImages;
-          break;
-        case 'hard':
-          images = hardImages;
-          break;
-        default:
-          images = [];
-      }
-      var randomIndex = Math.floor(Math.random() * images.length);
-      var randomImage = images[randomIndex];
-      var imageContainer = $('#imageContainer');
-      imageContainer.html(`<img src="${randomImage}" alt="Random Image">`);
-      startTimer(difficulty); // Start the timer when a button is clicked
-
-      // Remove active class from all buttons
-      $('button').removeClass('active');
-      // Add active class to the clicked button
-      $('#' + difficulty + 'Btn').addClass('active');
+    function confirmAndOpenPopup(buttonName, imagesArray, duration) {
+        var confirmation = confirm("Do you want to open the popup?");
+        if (confirmation) {
+            openPopup(buttonName, imagesArray, duration);
+        } else {
+            // Do nothing or handle the cancellation
+        }
     }
 
-    function startTimer(difficulty) {
-      var timerElement = $('#' + difficulty + 'Timer');
-      var time = 0;
-      timerInterval = setInterval(function() {
-        time++;
-        var minutes = Math.floor(time / 60);
-        var seconds = time % 60;
-        timerElement.text(('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2));
-      }, 1000); // Update the timer every second
+    function openPopup(buttonName, imagesArray, duration) {
+        // Set random image source
+        var randomImageSrc = getRandomImage(imagesArray);
+        popupImageElement.src = randomImageSrc;
+
+        // Set image name as popup title
+        var imageName = randomImageSrc.split('/').pop(); // Get the last part of the URL (image name)
+        popupTitleElement.textContent = imageName;
+
+        // Add row to the table
+        addRow(buttonName, imageName, duration);
+
+        // Show overlay
+        document.getElementById('overlay').style.display = 'block';
+
+        // Show popup
+        popupContainer.style.display = 'block';
+        resetTimer();
+        startTimer(duration);
     }
 
-    function addRow() {
-      var inputTableBody = $('#inputTableBody');
-      var newRow = $('<tr>');
-      newRow.append('<td>' + inputTableBody.children('tr').length + '</td>');
-      newRow.append('<td><input type="text" class="inputField"></td>');
-      newRow.append('<td><input type="text" class="inputField"></td>');
-      inputTableBody.append(newRow);
+    function addRow(buttonName, imageName, duration) {
+        rowCount++;
+        var newRow = `
+            <tr>
+                <td>${rowCount}</td>
+                <td><span class="imageLink" onclick="togglePopup('${imageName}')">${imageName}</span></td>
+                <td>${buttonName}</td>
+                <td>${duration} seconds</td>
+                <td><input type="text" name="me_${rowCount}" /></td>
+                <td>
+                    <select name="rating_me_${rowCount}">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </td>
+                <td><input type="text" name="you_${rowCount}" /></td>
+                <td>
+                    <select name="rating_you_${rowCount}">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </td>
+                <td><button class="deleteRowButton" onclick="deleteRow(this)">Delete Row</button></td>
+            </tr>
+        `;
+        dataTableBody.insertAdjacentHTML('beforeend', newRow);
     }
-  </script>
+
+    function getRandomImage(imagesArray) {
+        var randomIndex = Math.floor(Math.random() * imagesArray.length);
+        return imagesArray[randomIndex];
+    }
+
+    function startTimer(duration) {
+        interval = setInterval(function() {
+            seconds++;
+            if (seconds === 60) {
+                seconds = 0;
+                minutes++;
+            }
+            timerElement.textContent = (minutes < 10 ? '0' + minutes : minutes) + ':' + (seconds < 10 ? '0' + seconds : seconds);
+        }, 1000);
+
+        setTimeout(function() {
+            clearInterval(interval);
+            timerElement.textContent = 'Time\'s up!';
+        }, duration * 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(interval);
+    }
+
+    function resetTimer() {
+        clearInterval(interval);
+        minutes = 0;
+        seconds = 0;
+        timerElement.textContent = '00:00';
+    }
+
+    function cancelPopup() {
+        clearInterval(interval);
+        popupContainer.style.display = 'none';
+        
+        // Hide overlay
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    function donePopup() {
+        clearInterval(interval);
+        var totalDurationElement = document.querySelector('#dataTable tbody tr:last-child td:nth-child(4)');
+        totalDurationElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+        popupContainer.style.display = 'none';
+        
+        // Hide overlay
+        document.getElementById('overlay').style.display = 'none';
+    }
+
+    function togglePopup(imageName) {
+        var imageSrc = getImageSrc(imageName);
+        popupImageElement.src = imageSrc;
+        popupTitleElement.textContent = imageName;
+        
+        if (popupContainer.style.display === 'block') {
+            cancelPopup();
+        } else {
+            openPopupFromTable(imageName);
+        }
+    }
+
+    function getImageSrc(imageName) {
+        // Implement logic to get image source based on image name
+        // For now, returning a placeholder value
+        return './placeholder_image.jpg';
+    }
+
+    // Drag and drop functionality
+    var isDragging = false;
+    var initialX;
+    var initialY;
+
+    popupContainer.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        initialX = e.clientX - popupContainer.offsetLeft;
+        initialY = e.clientY - popupContainer.offsetTop;
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (isDragging) {
+            e.preventDefault();
+            var newX = e.clientX - initialX;
+            var newY = e.clientY - initialY;
+            popupContainer.style.left = newX + 'px';
+            popupContainer.style.top = newY + 'px';
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        isDragging = false;
+    });
+
+    // Function to delete row
+    function deleteRow(button) {
+        var row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+
+    // Confirmation dialog for page refresh
+    window.addEventListener('beforeunload', function(event) {
+        event.preventDefault();
+        event.returnValue = '';
+    });
+</script>
+
 </body>
 </html>
